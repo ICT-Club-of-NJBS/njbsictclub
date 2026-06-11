@@ -1,0 +1,248 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    NJBS ICT CLUB PLATFORM - QUICK REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+📌 START HERE: Read QUICKSTART.md (3 minutes to setup everything)
+
+───────────────────────────────────────────────────────────────────────────────
+🔐 ADMIN CREDENTIALS
+───────────────────────────────────────────────────────────────────────────────
+Email:    sangamkunwar48@gmail.com
+Password: Admin@123
+Status:   Auto-generated user ID (NJBS-YYYYMMDDHHMMSS)
+
+⚠️  IMPORTANT: Change password after first login!
+
+───────────────────────────────────────────────────────────────────────────────
+🚀 SETUP IN 3 STEPS
+───────────────────────────────────────────────────────────────────────────────
+1. Go to Supabase → SQL Editor
+2. Copy SQL from QUICKSTART.md and run it
+3. Run: npm run dev
+
+That's it! Visit: http://localhost:3000
+
+───────────────────────────────────────────────────────────────────────────────
+📍 KEY ROUTES
+───────────────────────────────────────────────────────────────────────────────
+Public:
+  /                          Homepage
+  /auth/login               Login page
+  /auth/signup              Sign up page
+  /auth/forgot-password     Password reset request
+  /auth/reset-password      Reset with 6-digit code
+
+Protected:
+  /admin                     Admin dashboard (ADMIN ONLY)
+
+APIs:
+  POST   /api/auth/login                      → Login
+  POST   /api/auth/signup                     → Sign up
+  POST   /api/auth/forgot-password            → Request reset code
+  POST   /api/auth/reset-password             → Reset password
+  GET    /api/auth/me                         → Get current user
+  POST   /api/events/[id]/register            → Register for event
+  GET    /api/admin/events/[id]/registrations → View registrations
+
+───────────────────────────────────────────────────────────────────────────────
+⭐ EVENT REGISTRATION WITH MESSAGES
+───────────────────────────────────────────────────────────────────────────────
+Users can now register for events with:
+  ✓ Name (required)
+  ✓ Email (required)
+  ✓ Phone (optional)
+  ✓ Message (optional) ← NEW FEATURE!
+
+Admins can see:
+  → All registrations
+  → User messages
+  → Registration status
+  → Can mark as attended/cancelled
+
+Admin Dashboard: /admin → Events → [Event name] → Registrations
+
+───────────────────────────────────────────────────────────────────────────────
+👥 ADMIN DASHBOARD FEATURES
+───────────────────────────────────────────────────────────────────────────────
+Members Tab:
+  • View all members
+  • Change roles (member/admin/moderator)
+  • View QR codes (NJBS-YYYYMMDDHHMMSS)
+  • Delete members
+  • View member details
+
+Events Tab:
+  • Create new events
+  • View all registrations with MESSAGES
+  • Edit/delete events
+  • Track attendance
+  • Manage capacity
+
+Projects Tab:
+  • Create projects
+  • Edit/delete projects
+  • Manage members in projects
+
+Statistics:
+  • Total members
+  • Total events
+  • Total projects
+  • Total messages
+
+───────────────────────────────────────────────────────────────────────────────
+🔧 ENVIRONMENT VARIABLES (Required)
+───────────────────────────────────────────────────────────────────────────────
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_secret_key
+
+Get these from: Supabase → Project Settings → API
+
+───────────────────────────────────────────────────────────────────────────────
+💾 DATABASE TABLES
+───────────────────────────────────────────────────────────────────────────────
+users                → Member accounts
+reset_tokens         → Password reset codes
+projects             → Club projects
+events               → Club events
+event_registrations  → Event sign-ups (with messages!)
+members_projects     → Project membership
+messages             → Announcements
+
+───────────────────────────────────────────────────────────────────────────────
+🔒 SECURITY FEATURES
+───────────────────────────────────────────────────────────────────────────────
+✓ Bcryptjs password hashing (salt 10)
+✓ JWT token authentication (7-day expiry)
+✓ HTTP-only secure cookies
+✓ 6-digit password reset codes (15-min expiry)
+✓ Role-based access control
+✓ Input validation on all endpoints
+✓ Admin route protection
+✓ One-time password reset tokens
+
+───────────────────────────────────────────────────────────────────────────────
+❌ COMMON ISSUES & FIXES
+───────────────────────────────────────────────────────────────────────────────
+ERROR: "Could not find table 'public.users'"
+FIX:   Run SQL code from QUICKSTART.md in Supabase SQL Editor
+
+ERROR: "Login not working"
+FIX:   Check environment variables are set correctly
+       Verify tables exist in Supabase
+
+ERROR: "Can't see admin panel"
+FIX:   Make sure logged in as admin user
+       Check user role in database (should be 'admin')
+
+ERROR: "Event message not saving"
+FIX:   Verify event_registrations table has "message" column
+       Check browser console for errors
+
+───────────────────────────────────────────────────────────────────────────────
+📚 DOCUMENTATION FILES
+───────────────────────────────────────────────────────────────────────────────
+QUICKSTART.md              → 3-step setup guide (START HERE!)
+SETUP_GUIDE.md             → Complete documentation
+IMPLEMENTATION_SUMMARY.md  → What was built
+README_IMPLEMENTATION.md   → Full guide
+QUICK_REFERENCE.txt        → This file
+
+───────────────────────────────────────────────────────────────────────────────
+📊 USER ROLES
+───────────────────────────────────────────────────────────────────────────────
+Member:
+  • Register for events
+  • View own profile
+  • See public club info
+
+Moderator:
+  • All member permissions
+  • Moderate events
+  • View some admin info
+
+Admin:
+  • Full admin dashboard
+  • Manage members, events, projects
+  • View all registrations
+  • Send announcements
+  • Change user roles
+
+───────────────────────────────────────────────────────────────────────────────
+🎯 TYPICAL WORKFLOW
+───────────────────────────────────────────────────────────────────────────────
+1. Setup Phase:
+   - Run SQL from QUICKSTART.md
+   - Verify tables created
+   - Start npm run dev
+
+2. Admin Creates Event:
+   - Login to /admin
+   - Go to Events tab
+   - Click "Create Event"
+   - Fill details and save
+
+3. User Registers:
+   - Visit event page
+   - Click "Register"
+   - Enter name, email, phone, message
+   - Submit
+
+4. Admin Manages:
+   - Go to /admin → Events
+   - Click event name
+   - See all registrations with messages
+   - Mark as attended/cancelled
+
+───────────────────────────────────────────────────────────────────────────────
+🚀 DEPLOYMENT CHECKLIST
+───────────────────────────────────────────────────────────────────────────────
+Before deploying:
+ ☐ Tables created in Supabase
+ ☐ Admin user created
+ ☐ Can login locally
+ ☐ Can create events
+ ☐ Can register with message
+ ☐ Can see registrations in admin
+ ☐ npm run dev works
+ ☐ npm run build succeeds
+
+Vercel deployment:
+ ☐ Push to GitHub
+ ☐ Import to Vercel
+ ☐ Add environment variables
+ ☐ Deploy
+ ☐ Test production URL
+
+───────────────────────────────────────────────────────────────────────────────
+🆘 NEED HELP?
+───────────────────────────────────────────────────────────────────────────────
+1. Check browser console (F12 → Console tab)
+2. Check Vercel logs (if deployed)
+3. Review QUICKSTART.md or SETUP_GUIDE.md
+4. Verify tables exist in Supabase
+5. Check environment variables are set
+
+───────────────────────────────────────────────────────────────────────────────
+✨ KEY HIGHLIGHTS
+───────────────────────────────────────────────────────────────────────────────
+✓ Complete migration from MongoDB to Supabase
+✓ Event registration with user messages
+✓ Professional admin dashboard
+✓ Secure JWT authentication
+✓ QR code generation
+✓ Role-based access control
+✓ Production-ready code
+✓ Comprehensive documentation
+
+───────────────────────────────────────────────────────────────────────────────
+🎉 YOU'RE ALL SET!
+───────────────────────────────────────────────────────────────────────────────
+Next step: Open QUICKSTART.md and follow the 3 steps!
+
+Time needed: ~5 minutes to complete setup
+
+═══════════════════════════════════════════════════════════════════════════════
+Generated: April 25, 2026 | NJBS ICT Club Management System | Status: Ready ✅
+═══════════════════════════════════════════════════════════════════════════════

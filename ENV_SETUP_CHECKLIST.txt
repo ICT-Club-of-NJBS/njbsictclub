@@ -1,0 +1,135 @@
+═══════════════════════════════════════════════════════════════════════════════
+                    ENVIRONMENT SETUP CHECKLIST
+═══════════════════════════════════════════════════════════════════════════════
+
+🎯 WHAT YOU NEED TO ADD TO .env.local:
+
+4 Required Environment Variables:
+  1. NEXT_PUBLIC_SUPABASE_URL
+  2. NEXT_PUBLIC_SUPABASE_ANON_KEY
+  3. SUPABASE_SERVICE_ROLE_KEY
+  4. JWT_SECRET
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 STEP-BY-STEP SETUP:
+═══════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Get Supabase Keys
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ☐ Go to https://app.supabase.com
+  ☐ Login with your account
+  ☐ Click on your project
+  ☐ Click "Settings" in left sidebar
+  ☐ Click "API" 
+  ☐ Copy "Project URL" → This is your NEXT_PUBLIC_SUPABASE_URL
+  ☐ Copy "anon public" key → This is your NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ☐ Copy "service_role secret" key → This is your SUPABASE_SERVICE_ROLE_KEY
+
+  Example values you'll see:
+    NEXT_PUBLIC_SUPABASE_URL = https://abcdefgh.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+
+STEP 2: Generate JWT Secret
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ☐ Open your terminal/command prompt
+  ☐ Run this command:
+  
+     node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+  
+  ☐ Copy the output (it's a long string of letters and numbers)
+  ☐ This is your JWT_SECRET
+
+
+STEP 3: Create .env.local File
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ☐ In your project folder, create a new file called ".env.local"
+  ☐ Add these lines (paste your actual values):
+
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+    SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+    JWT_SECRET=your_jwt_secret_here
+
+  ☐ Save the file
+  ☐ DO NOT share this file or commit to Git
+
+
+STEP 4: Test Your Setup
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ☐ Run: npm run dev
+  ☐ Visit: http://localhost:3000
+  ☐ If you see the page without errors, you're good!
+  ☐ Try signup/login to verify it works
+
+
+STEP 5: (Optional) Deploy to Vercel
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ☐ Go to https://vercel.com/dashboard
+  ☐ Click your project
+  ☐ Click "Settings"
+  ☐ Click "Environment Variables"
+  ☐ Add the same 4 variables
+  ☐ Click "Save and Redeploy"
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 YOUR VARIABLES:
+═══════════════════════════════════════════════════════════════════════════════
+
+Copy and paste this template, filling in your values:
+
+  NEXT_PUBLIC_SUPABASE_URL=
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=
+  SUPABASE_SERVICE_ROLE_KEY=
+  JWT_SECRET=
+
+═══════════════════════════════════════════════════════════════════════════════
+🔐 SECURITY CHECKLIST:
+═══════════════════════════════════════════════════════════════════════════════
+
+  ☐ .env.local is in project root (same folder as package.json)
+  ☐ .env.local is NOT committed to Git
+  ☐ SUPABASE_SERVICE_ROLE_KEY is kept secret (not shared)
+  ☐ JWT_SECRET is a random string (at least 32 characters)
+  ☐ No typos in variable names
+  ☐ No quotes around values
+  ☐ No extra spaces before/after values
+
+═══════════════════════════════════════════════════════════════════════════════
+❓ TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════════════════════════
+
+Problem: "NEXT_PUBLIC_SUPABASE_URL is not defined"
+Solution:
+  1. Check .env.local exists in project root
+  2. Check variable name is spelled correctly (no typos)
+  3. Check value is not empty
+  4. Restart: npm run dev
+
+Problem: "Could not find the table 'public.users'"
+Solution:
+  1. Tables not created yet
+  2. Follow QUICKSTART.md to create tables in Supabase
+
+Problem: "Invalid JWT"
+Solution:
+  1. Check JWT_SECRET is set
+  2. Make sure it's a random string
+  3. Restart dev server
+
+═══════════════════════════════════════════════════════════════════════════════
+📚 WHERE TO FIND MORE INFO:
+═══════════════════════════════════════════════════════════════════════════════
+
+  .env.example              → Template file (copy and fill)
+  ENV_SETUP_GUIDE.md        → Detailed setup guide
+  QUICKSTART.md             → Next step after env setup
+  00_START_HERE.md          → Overall guide
+  
+═══════════════════════════════════════════════════════════════════════════════

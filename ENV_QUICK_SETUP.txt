@@ -1,0 +1,80 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                  .env.LOCAL SETUP - QUICK GUIDE                              ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+🎯 YOU NEED TO CREATE ONE FILE: .env.local
+
+Location: Your project root folder (same level as package.json)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+📋 WHAT TO ADD TO .env.local:
+
+4 Variables (copy from Supabase or generate):
+
+1. NEXT_PUBLIC_SUPABASE_URL
+   ← From: Supabase → Settings → API → "Project URL"
+
+2. NEXT_PUBLIC_SUPABASE_ANON_KEY
+   ← From: Supabase → Settings → API → "anon public" (under Project API keys)
+
+3. SUPABASE_SERVICE_ROLE_KEY
+   ← From: Supabase → Settings → API → "service_role secret" (under Project API keys)
+
+4. JWT_SECRET
+   ← Generate: Open terminal and run:
+      node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+✍️ CREATE YOUR .env.local FILE:
+
+Step 1: Create a new file in your project root folder
+        Name it: .env.local
+
+Step 2: Copy this template into the file:
+
+────────────────────────────────────────────────────────────────────────────────
+NEXT_PUBLIC_SUPABASE_URL=your_url_here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+JWT_SECRET=your_jwt_secret_here
+────────────────────────────────────────────────────────────────────────────────
+
+Step 3: Replace the values:
+        - your_url_here → From Supabase (looks like https://abc123.supabase.co)
+        - your_anon_key_here → From Supabase (long string starting with eyJhbGc...)
+        - your_service_role_key_here → From Supabase (long string starting with eyJhbGc...)
+        - your_jwt_secret_here → From your terminal command (64 char string)
+
+Step 4: Save the file
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTATION:
+
+For detailed instructions:
+  → ENV_SETUP_GUIDE.md (complete step-by-step guide)
+  → ENV_VISUAL_GUIDE.md (with screenshots and examples)
+  → .env.example (template file to copy)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+✅ AFTER CREATING .env.local:
+
+1. Save the file
+2. Run: npm run dev
+3. Visit: http://localhost:3000
+4. If page loads, you're done! ✅
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANT:
+
+- Don't use quotes: WRONG: "https://..." CORRECT: https://...
+- No extra spaces: WRONG: URL = https:// CORRECT: URL=https://
+- Keep it secret: Never share .env.local or commit to Git
+- File must be in project root (same folder as package.json)
+- File name must be exactly: .env.local (with the dot)
+
+═══════════════════════════════════════════════════════════════════════════════════

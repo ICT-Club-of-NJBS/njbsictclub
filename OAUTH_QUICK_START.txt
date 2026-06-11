@@ -1,0 +1,140 @@
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║         GOOGLE & GITHUB OAUTH SETUP - QUICK START GUIDE                      ║
+║                                                                               ║
+║  Add Google and GitHub login to your NJBS ICT Club platform                  ║
+║  (Keeps your existing custom JWT authentication)                             ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+
+📋 WHAT YOU NEED TO DO:
+
+You'll need to get credentials from Google and GitHub, then add them to your
+.env.local file. Total time: ~30 minutes.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+🔵 GOOGLE OAUTH (15 minutes)
+
+1. Go to: https://console.cloud.google.com/
+2. Create new project named "NJBS ICT Club"
+3. Search for "Google+ API" and enable it
+4. Go to Credentials → Create OAuth 2.0 credentials
+5. Add this redirect URI:
+   http://localhost:3000/api/auth/callback/google
+6. Copy Client ID and Client Secret
+7. Add to .env.local:
+   NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id
+   GOOGLE_CLIENT_SECRET=your_client_secret
+
+✅ Done! Google login is ready.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+⚫ GITHUB OAUTH (15 minutes)
+
+1. Go to: https://github.com/settings/developers
+2. Click OAuth Apps → New OAuth App
+3. Fill form:
+   - Name: NJBS ICT Club
+   - Homepage: http://localhost:3000
+   - Callback: http://localhost:3000/api/auth/callback/github
+4. Click Register
+5. Copy Client ID and Client Secret
+6. Add to .env.local:
+   NEXT_PUBLIC_GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+
+✅ Done! GitHub login is ready.
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+📝 YOUR .ENV.LOCAL FILE SHOULD LOOK LIKE:
+
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+JWT_SECRET=your_jwt_secret
+
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+NEXT_PUBLIC_GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+🚀 TEST IT
+
+1. Run: npm run dev
+2. Visit: http://localhost:3000/auth/login
+3. Should see:
+   - "Continue with Google" button
+   - "Continue with GitHub" button
+   - "Email" login option
+4. Click one and test the flow
+5. Should login and redirect to dashboard
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+✅ WHAT YOU GET
+
+After setup, users can:
+✓ Sign up with Google
+✓ Sign up with GitHub  
+✓ Sign up with email/password (still works)
+✓ Login with any method
+✓ Get automatic QR code for events
+✓ Admin can view/download member QR codes
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+📂 DETAILED GUIDES
+
+For more details, see:
+- OAUTH_SETUP.md - Complete step-by-step guide
+- OAUTH_CHECKLIST.md - Checkbox checklist to follow
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+⚠️  IMPORTANT NOTES
+
+• KEEP Google Client Secret SECRET!
+• KEEP GitHub Client Secret SECRET!
+• Only put IDs in NEXT_PUBLIC_* variables
+• Secrets go in GOOGLE_CLIENT_SECRET and GITHUB_CLIENT_SECRET
+• Restart dev server after updating .env.local
+• Clear browser cache if buttons don't appear
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+🎯 NEXT STEPS
+
+1. Follow Google OAuth setup (above)
+2. Follow GitHub OAuth setup (above)
+3. Update .env.local with all 4 new variables
+4. Run: npm run dev
+5. Test OAuth at http://localhost:3000/auth/login
+6. Deploy to Vercel (add same env vars there)
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+💡 QUESTIONS?
+
+Check these files:
+- OAUTH_SETUP.md - Detailed step-by-step guide with screenshots
+- OAUTH_CHECKLIST.md - Checkbox guide to follow along
+- .env.example - Shows all variables needed
+
+═══════════════════════════════════════════════════════════════════════════════════
+
+✨ YOU'RE ALL SET!
+
+Everything is documented. Just follow the steps above and you'll have Google
+and GitHub login working in ~30 minutes! 🎉
+
+═══════════════════════════════════════════════════════════════════════════════════
+Generated: April 25, 2026 | NJBS ICT Club | Status: READY FOR OAUTH
+═══════════════════════════════════════════════════════════════════════════════════
