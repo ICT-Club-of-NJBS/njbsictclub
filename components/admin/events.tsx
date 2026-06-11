@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Edit2, Trash2, Plus, X, Save, Calendar } from 'lucide-react'
+import { Edit2, Trash2, Plus, X, Save } from 'lucide-react'
 
 interface Event {
-  _id: string
+  _id: string // Maps seamlessly to SQL 'id' via payload normalization
   title: string
   description: string
   event_date: string
@@ -41,20 +41,30 @@ export default function AdminEvents() {
     fetchEvents()
   }, [])
 
-  // ✅ FETCH EVENTS (MongoDB API)
+  // Helper utility to safely convert backend database items to match client expectations
+  const normalizeEvent = (dbEvent: any): Event => {
+    return {
+      ...dbEvent,
+      _id: dbEvent._id || dbEvent.id, // Gracefully fallbacks from PostgreSQL schema setups
+      createdAt: dbEvent.createdAt || dbEvent.created_at
+    }
+  }
+
+  // ✅ FETCH EVENTS
   const fetchEvents = async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/events')
-
-      if (!res.ok) throw new Error('Failed to fetch')
+      if (!res.ok) throw new Error('Failed to fetch events from database.')
 
       const data = await res.json()
-      setEvents(data)
-    } catch (error) {
+      // Normalize entire list arrays cleanly
+      const formattedEvents = Array.isArray(data) ? data.map(normalizeEvent) : []
+      setEvents(formattedEvents)
+    } catch (error: any) {
       console.error('Error fetching events:', error)
       setMessage({
-        text: 'Database connection error. Please check your setup.',
+        text: error.message || 'Database connection error. Please check your setup.',
         type: 'error',
       })
     } finally {
@@ -71,7 +81,10 @@ export default function AdminEvents() {
         method: 'DELETE',
       })
 
-      if (!res.ok) throw new Error('Delete failed')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null)
+        throw new Error(errData?.message || errData?.error || 'Delete failed')
+      }
 
       setEvents(events.filter((e) => e._id !== id))
       setMessage({ text: 'Event deleted successfully', type: 'success' })
@@ -81,26 +94,32 @@ export default function AdminEvents() {
     }
   }
 
-  // ✅ EDIT
+  // ✅ EDIT POPULATOR
   const handleEdit = (event: Event) => {
-    const datetime = new Date(event.event_date)
+    try {
+      const datetime = new Date(event.event_date)
+      const isValidDate = !isNaN(datetime.getTime())
 
-    setFormData({
-      title: event.title,
-      description: event.description,
-      event_date: datetime.toISOString().split('T')[0],
-      event_time: datetime.toISOString().split('T')[1]?.slice(0, 5) || '18:00',
-      location: event.location || '',
-      event_type: event.event_type,
-      capacity: event.capacity || 50,
-      image_url: event.image_url || '',
-    })
+      setFormData({
+        title: event.title || '',
+        description: event.description || '',
+        event_date: isValidDate ? datetime.toISOString().split('T')[0] : '',
+        event_time: isValidDate ? datetime.toISOString().split('T')[1]?.slice(0, 5) : '18:00',
+        location: event.location || '',
+        event_type: event.event_type || 'workshop',
+        capacity: event.capacity || 50,
+        image_url: event.image_url || '',
+      })
 
-    setEditingId(event._id)
-    setShowForm(true)
+      setEditingId(event._id)
+      setShowForm(true)
+    } catch (err) {
+      console.error('Failed to parse event date for editing', err)
+      setMessage({ text: 'Error parsing event details for editing', type: 'error' })
+    }
   }
 
-  // ✅ CREATE / UPDATE
+  // ✅ CREATE / UPDATE SUBMITTER
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -109,7 +128,7 @@ export default function AdminEvents() {
       return
     }
 
-    const eventDateTime = `${formData.event_date}T${formData.event_time}:00`
+    const eventDateTime = `${formData.event_date}T${formData.event_time || '00:00'}:00`
 
     const eventData = {
       title: formData.title,
@@ -117,43 +136,53 @@ export default function AdminEvents() {
       event_date: eventDateTime,
       location: formData.location,
       event_type: formData.event_type,
-      capacity: formData.capacity,
+      capacity: Number(formData.capacity),
       image_url: formData.image_url,
     }
 
     try {
       if (editingId) {
-        // UPDATE
+        // UPDATE ACTIONS
         const res = await fetch(`/api/events/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         })
 
-        if (!res.ok) throw new Error('Update failed')
+        if (!res.ok) {
+          const errorResponse = await res.json().catch(() => null)
+          const detailedError = errorResponse?.message || errorResponse?.error || 'Update failed'
+          throw new Error(`${detailedError} (Status: ${res.status})`)
+        }
 
-        const updated = await res.json()
+        const rawUpdated = await res.json()
+        const updated = normalizeEvent(rawUpdated)
 
         setEvents(events.map((e) => (e._id === editingId ? updated : e)))
         setMessage({ text: 'Event updated successfully', type: 'success' })
         setEditingId(null)
       } else {
-        // CREATE
+        // CREATE ACTIONS
         const res = await fetch('/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventData),
         })
 
-        if (!res.ok) throw new Error('Create failed')
+        if (!res.ok) {
+          const errorResponse = await res.json().catch(() => null)
+          const detailedError = errorResponse?.message || errorResponse?.error || 'Create failed'
+          throw new Error(`${detailedError} (Status: ${res.status})`)
+        }
 
-        const created = await res.json()
+        const rawCreated = await res.json()
+        const created = normalizeEvent(rawCreated)
 
         setEvents([created, ...events])
         setMessage({ text: 'Event created successfully', type: 'success' })
       }
 
-      // RESET FORM
+      // RESET STATE CONTROL
       setFormData({
         title: '',
         description: '',
@@ -164,18 +193,16 @@ export default function AdminEvents() {
         capacity: 50,
         image_url: '',
       })
-
       setShowForm(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving event:', error)
-      setMessage({ text: 'Error saving event', type: 'error' })
+      setMessage({ text: error.message || 'Error saving event', type: 'error' })
     }
   }
 
-  // FILTER
   const filteredEvents = events.filter(
     (e) =>
-      e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      e.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       e.location?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -196,10 +223,19 @@ export default function AdminEvents() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-2xl font-bold">Events Management</h3>
-
         <Button
           onClick={() => {
             setEditingId(null)
+            setFormData({
+              title: '',
+              description: '',
+              event_date: '',
+              event_time: '18:00',
+              location: '',
+              event_type: 'workshop',
+              capacity: 50,
+              image_url: '',
+            })
             setShowForm(!showForm)
           }}
         >
@@ -226,7 +262,6 @@ export default function AdminEvents() {
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* FORM */}
       {showForm && (
         <Card className="p-6 bg-slate-50 border-2 border-slate-200">
           <div className="flex justify-between items-center mb-4">
@@ -234,6 +269,7 @@ export default function AdminEvents() {
               {editingId ? 'Edit Event' : 'Create New Event'}
             </h4>
             <button
+              type="button"
               onClick={() => {
                 setShowForm(false)
                 setEditingId(null)
@@ -245,42 +281,33 @@ export default function AdminEvents() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Title */}
             <div>
               <label className="block text-sm font-medium mb-2">Title *</label>
               <Input
                 placeholder="Event title"
                 value={formData.title}
-                onChange={(e) =>
-                  setFormData({ ...formData, title: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
               />
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium mb-2">Description</label>
               <textarea
                 placeholder="Event description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded-lg min-h-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg min-h-24 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
               />
             </div>
 
-            {/* Date & Time */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Date *</label>
                 <Input
                   type="date"
                   value={formData.event_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, event_date: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
                   required
                 />
               </div>
@@ -289,35 +316,27 @@ export default function AdminEvents() {
                 <Input
                   type="time"
                   value={formData.event_time}
-                  onChange={(e) =>
-                    setFormData({ ...formData, event_time: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, event_time: e.target.value })}
                 />
               </div>
             </div>
 
-            {/* Location */}
             <div>
               <label className="block text-sm font-medium mb-2">Location</label>
               <Input
                 placeholder="Event location (e.g., Room 101, Hall A)"
                 value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               />
             </div>
 
-            {/* Event Type & Capacity */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Event Type</label>
                 <select
                   value={formData.event_type}
-                  onChange={(e) =>
-                    setFormData({ ...formData, event_type: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setFormData({ ...formData, event_type: e.target.value })}
+                  className="w-full h-10 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
                 >
                   <option value="workshop">Workshop</option>
                   <option value="seminar">Seminar</option>
@@ -337,7 +356,7 @@ export default function AdminEvents() {
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      capacity: parseInt(e.target.value) || 50,
+                      capacity: parseInt(e.target.value) || 0,
                     })
                   }
                   min="1"
@@ -345,24 +364,17 @@ export default function AdminEvents() {
               </div>
             </div>
 
-            {/* Image URL */}
             <div>
               <label className="block text-sm font-medium mb-2">Image URL</label>
               <Input
                 placeholder="https://example.com/image.jpg"
                 value={formData.image_url}
-                onChange={(e) =>
-                  setFormData({ ...formData, image_url: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
               />
             </div>
 
-            {/* Form Actions */}
             <div className="flex gap-3 pt-4">
-              <Button
-                type="submit"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-              >
+              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
                 <Save size={16} className="mr-2" />
                 {editingId ? 'Update Event' : 'Create Event'}
               </Button>
@@ -372,7 +384,7 @@ export default function AdminEvents() {
                   setShowForm(false)
                   setEditingId(null)
                 }}
-                className="flex-1 bg-gray-200 hover:bg-gray-300"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800"
               >
                 Cancel
               </Button>
@@ -381,7 +393,6 @@ export default function AdminEvents() {
         </Card>
       )}
 
-      {/* LIST */}
       {loading ? (
         <div className="text-center py-8">
           <p className="text-gray-500">Loading events...</p>
@@ -397,13 +408,10 @@ export default function AdminEvents() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="text-xl font-bold text-slate-900">
-                      {event.title}
-                    </h4>
+                    <h4 className="text-xl font-bold text-slate-900">{event.title}</h4>
                     {event.event_type && (
                       <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                        {event.event_type.charAt(0).toUpperCase() +
-                          event.event_type.slice(1)}
+                        {event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1)}
                       </span>
                     )}
                   </div>
@@ -418,35 +426,25 @@ export default function AdminEvents() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                     <div>
                       <span className="text-gray-500">Date & Time</span>
-                      <p className="font-medium">
-                        {formatEventDate(event.event_date)}
-                      </p>
+                      <p className="font-medium">{formatEventDate(event.event_date)}</p>
                     </div>
-
                     {event.location && (
                       <div>
                         <span className="text-gray-500">Location</span>
                         <p className="font-medium">{event.location}</p>
                       </div>
                     )}
-
                     {event.capacity && (
                       <div>
                         <span className="text-gray-500">Capacity</span>
                         <p className="font-medium">{event.capacity} people</p>
                       </div>
                     )}
-
                     {event.image_url && (
                       <div>
                         <span className="text-gray-500">Image</span>
                         <p className="font-medium text-blue-600 truncate">
-                          <a
-                            href={event.image_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                          >
+                          <a href={event.image_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                             View
                           </a>
                         </p>
@@ -468,18 +466,11 @@ export default function AdminEvents() {
               </div>
 
               <div className="flex gap-2 mt-4 pt-4 border-t">
-                <Button
-                  onClick={() => handleEdit(event)}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                >
+                <Button onClick={() => handleEdit(event)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
                   <Edit2 size={16} className="mr-2" />
                   Edit
                 </Button>
-
-                <Button
-                  onClick={() => handleDelete(event._id)}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
+                <Button onClick={() => handleDelete(event._id)} className="flex-1 bg-red-600 hover:bg-red-700 text-white">
                   <Trash2 size={16} className="mr-2" />
                   Delete
                 </Button>
