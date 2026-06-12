@@ -24,7 +24,6 @@ export default function AdminProjects() {
   const [message, setMessage] = useState({ text: '', type: '' })
   const [loading, setLoading] = useState(false)
 
-  // Form states tracking values perfectly matching your UI inputs
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -40,10 +39,11 @@ export default function AdminProjects() {
     fetchProjects()
   }, [])
 
-  // Helper utility function to parse snake_case backend fields safely into camelCase React states
   const normalizeProjectData = (item: any): Project => {
+    if (!item) return {} as Project
     return {
-      id: item.id,
+      // Handles both MongoDB '_id' or SQL 'id' variations safely
+      id: item._id || item.id || '', 
       name: item.name || '',
       description: item.description || '',
       status: item.status || 'active',
@@ -60,8 +60,8 @@ export default function AdminProjects() {
     try {
       const res = await fetch('/api/admin/projects')
       if (res.ok) {
-        const data = await res.json()
-        // Safeguard array parsing map
+        const textData = await res.text()
+        const data = textData ? JSON.parse(textData) : []
         const cleanProjects = Array.isArray(data) ? data.map(normalizeProjectData) : []
         setProjects(cleanProjects)
       }
@@ -75,7 +75,7 @@ export default function AdminProjects() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // ADD PROJECT SUBMISSION HANDLER
+  // FIXED ADD PROJECT SUBMISSION HANDLER
   const handleAdd = async () => {
     if (!form.name.trim() || !form.description.trim()) {
       setMessage({ text: 'Name and Description required', type: 'error' })
@@ -101,16 +101,24 @@ export default function AdminProjects() {
         }),
       })
 
-      const responseData = await res.json()
+      // ✅ FIX: Read raw text first to avoid crashing if the body string is empty
+      const responseText = await res.text()
+      let responseData: any = {}
+      
+      if (responseText) {
+        try {
+          responseData = JSON.parse(responseText)
+        } catch (parseError) {
+          console.error("Failed to parse response payload:", parseError)
+        }
+      }
 
       if (res.ok) {
-        // Normalize data response layout before pushing it to view arrays
         const safeNewProject = normalizeProjectData(responseData)
         setProjects([safeNewProject, ...projects])
         
         setMessage({ text: 'Project added successfully', type: 'success' })
 
-        // Clear Form States cleanly
         setForm({
           name: '',
           description: '',
@@ -122,9 +130,8 @@ export default function AdminProjects() {
           demoUrl: '',
         })
       } else {
-        // Display specific database message right on your banner layout instead of generic fallback strings
         setMessage({ 
-          text: responseData.error || 'Failed to create project on server', 
+          text: responseData?.error || responseText || 'Failed to create project on server', 
           type: 'error' 
         })
       }
@@ -136,9 +143,8 @@ export default function AdminProjects() {
     setLoading(false)
   }
 
-  // DELETE PROJECT HANDLER
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this project?')) return
+    if (!id || !confirm('Delete this project?')) return
 
     try {
       const res = await fetch(`/api/admin/projects/${id}`, {
@@ -146,6 +152,7 @@ export default function AdminProjects() {
       })
 
       if (res.ok) {
+        // Safe mapping lookup fallback for database schema alignment
         setProjects(projects.filter((p) => p.id !== id))
         setMessage({ text: 'Project deleted successfully', type: 'success' })
       } else {
@@ -163,7 +170,6 @@ export default function AdminProjects() {
 
   return (
     <div className="space-y-6">
-      {/* ALERTS VIEW BANNER */}
       {message.text && (
         <Card
           className={`p-3 border font-medium ${
@@ -176,14 +182,12 @@ export default function AdminProjects() {
         </Card>
       )}
 
-      {/* SEARCH CONTROL BAR */}
       <Input
         placeholder="Search projects..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
 
-      {/* PROJECT ENTRY CREATION CARD */}
       <Card className="p-4 space-y-3">
         <h2 className="font-semibold flex items-center gap-2 text-foreground">
           <Plus size={16} /> Add New Project
@@ -224,7 +228,6 @@ export default function AdminProjects() {
         </Button>
       </Card>
 
-      {/* DATATABLE STREAM VIEW */}
       {filtered.length === 0 ? (
         <p className="text-center py-4 text-muted-foreground text-sm">No active projects found.</p>
       ) : (

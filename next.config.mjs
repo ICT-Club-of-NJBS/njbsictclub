@@ -16,6 +16,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: '*.vercel.app',
       },
+      // ✅ ADDED: Allows Next.js to fetch and show images directly from your Supabase Project
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co', // The double asterisks '**' match any project ID prefix smoothly
+      },
     ],
   },
   // Enable React strict mode for development
