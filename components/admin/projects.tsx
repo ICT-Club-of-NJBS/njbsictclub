@@ -1,9 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Trash2, Plus } from 'lucide-react'
 
 interface Project {
@@ -41,15 +39,18 @@ export default function AdminProjects() {
 
   const normalizeProjectData = (item: any): Project => {
     if (!item) return {} as Project
+    let techString = ''
+    if (item.technologies) {
+      techString = Array.isArray(item.technologies) ? item.technologies.join(', ') : item.technologies
+    }
     return {
-      // Handles both MongoDB '_id' or SQL 'id' variations safely
-      id: item._id || item.id || '', 
-      name: item.name || '',
+      id: item.id || item._id || '', 
+      name: item.title || item.name || '', 
       description: item.description || '',
       status: item.status || 'active',
       startDate: item.start_date || item.startDate || '',
       endDate: item.end_date || item.endDate || '',
-      technologies: item.technologies || '',
+      technologies: techString,
       githubUrl: item.github_url || item.githubUrl || '',
       demoUrl: item.demo_url || item.demoUrl || ''
     }
@@ -62,8 +63,7 @@ export default function AdminProjects() {
       if (res.ok) {
         const textData = await res.text()
         const data = textData ? JSON.parse(textData) : []
-        const cleanProjects = Array.isArray(data) ? data.map(normalizeProjectData) : []
-        setProjects(cleanProjects)
+        setProjects(Array.isArray(data) ? data.map(normalizeProjectData) : [])
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -75,198 +75,217 @@ export default function AdminProjects() {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  // FIXED ADD PROJECT SUBMISSION HANDLER
   const handleAdd = async () => {
     if (!form.name.trim() || !form.description.trim()) {
       setMessage({ text: 'Name and Description required', type: 'error' })
       return
     }
-
     setLoading(true)
-    setMessage({ text: '', type: '' })
-
+    const techArray = form.technologies ? form.technologies.split(',').map(t => t.trim()).filter(Boolean) : []
+    const payload = {
+      title: form.name.trim(), 
+      description: form.description.trim(),
+      status: form.status.toLowerCase(), 
+      start_date: form.startDate || null,
+      end_date: form.endDate || null,
+      technologies: techArray, 
+      github_url: form.githubUrl.trim() || null,
+      demo_url: form.demoUrl.trim() || null,
+    }
     try {
       const res = await fetch('/api/admin/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          description: form.description.trim(),
-          status: form.status,
-          startDate: form.startDate || null,
-          endDate: form.endDate || null,
-          technologies: form.technologies || null,
-          githubUrl: form.githubUrl || null,
-          demoUrl: form.demoUrl || null,
-        }),
+        body: JSON.stringify(payload),
       })
-
-      // ✅ FIX: Read raw text first to avoid crashing if the body string is empty
-      const responseText = await res.text()
-      let responseData: any = {}
-      
-      if (responseText) {
-        try {
-          responseData = JSON.parse(responseText)
-        } catch (parseError) {
-          console.error("Failed to parse response payload:", parseError)
-        }
-      }
-
       if (res.ok) {
-        const safeNewProject = normalizeProjectData(responseData)
-        setProjects([safeNewProject, ...projects])
-        
-        setMessage({ text: 'Project added successfully', type: 'success' })
-
-        setForm({
-          name: '',
-          description: '',
-          status: 'active',
-          startDate: '',
-          endDate: '',
-          technologies: '',
-          githubUrl: '',
-          demoUrl: '',
-        })
-      } else {
-        setMessage({ 
-          text: responseData?.error || responseText || 'Failed to create project on server', 
-          type: 'error' 
-        })
+        const responseData = await res.json()
+        setProjects([normalizeProjectData(responseData), ...projects])
+        setMessage({ text: 'Project added successfully!', type: 'success' })
+        setForm({ name: '', description: '', status: 'active', startDate: '', endDate: '', technologies: '', githubUrl: '', demoUrl: '' })
       }
     } catch (error) {
-      console.error('Error adding project:', error)
-      setMessage({ text: 'Internal Client processing error', type: 'error' })
+      console.error(error)
     }
-
     setLoading(false)
   }
 
   const handleDelete = async (id: string) => {
     if (!id || !confirm('Delete this project?')) return
-
     try {
-      const res = await fetch(`/api/admin/projects/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (res.ok) {
-        // Safe mapping lookup fallback for database schema alignment
-        setProjects(projects.filter((p) => p.id !== id))
-        setMessage({ text: 'Project deleted successfully', type: 'success' })
-      } else {
-        setMessage({ text: 'Delete route execution failed', type: 'error' })
-      }
+      const res = await fetch(`/api/admin/projects/${id}`, { method: 'DELETE' })
+      if (res.ok) setProjects(projects.filter((p) => p.id !== id))
     } catch (error) {
-      console.error('Error deleting project:', error)
-      setMessage({ text: 'Error deleting project', type: 'error' })
+      console.error(error)
     }
   }
 
-  const filtered = projects.filter((p) =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filtered = projects.filter((p) => p.name?.toLowerCase().includes(searchTerm.toLowerCase()))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 bg-transparent text-zinc-950 dark:text-zinc-50 transition-colors">
+      
+      {/* Alert Messages */}
       {message.text && (
-        <Card
-          className={`p-3 border font-medium ${
-            message.type === 'error' 
-              ? 'bg-red-50 text-red-700 border-red-200' 
-              : 'bg-green-50 text-green-700 border-green-200'
-          }`}
-        >
+        <div className={`p-4 border rounded-2xl font-medium ${message.type === 'error' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50' : 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900/50'}`}>
           {message.text}
-        </Card>
+        </div>
       )}
 
-      <Input
-        placeholder="Search projects..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
+      {/* Dynamic Search Input */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search projects..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-5 py-3 border border-zinc-200 bg-white text-zinc-950 placeholder-zinc-400 rounded-2xl shadow-xs focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder-zinc-600"
+        />
+      </div>
 
-      <Card className="p-4 space-y-3">
-        <h2 className="font-semibold flex items-center gap-2 text-foreground">
-          <Plus size={16} /> Add New Project
+      {/* Wrapper Main Card Panel - Dynamic Background Theme */}
+      <div className="p-8 space-y-6 border border-zinc-200 rounded-3xl shadow-xs bg-white text-zinc-950 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-50 transition-colors">
+        <h2 className="font-bold flex items-center gap-2 text-zinc-950 dark:text-zinc-50 text-xl tracking-tight">
+          <Plus size={20} className="text-purple-600" /> Add New Project
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <Input name="name" placeholder="Project Name" value={form.name} onChange={handleChange} />
-          
-          <select
-            name="status"
-            value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
-            className="px-3 py-2 border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="active">Active</option>
-            <option value="completed">Completed</option>
-            <option value="on-hold">On Hold</option>
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-4">
+            {/* Project Name Field */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">Project Name</label>
+              <input 
+                name="name" 
+                placeholder="Enter project title" 
+                value={form.name} 
+                onChange={handleChange} 
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 placeholder-zinc-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder-zinc-600" 
+              />
+            </div>
+            
+            {/* Status Dropdown Selector */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">Status</label>
+              <select
+                name="status"
+                value={form.status}
+                onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium cursor-pointer dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50"
+              >
+                <option value="active" className="bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">Active</option>
+                <option value="completed" className="bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">Completed</option>
+                <option value="on-hold" className="bg-white text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">On Hold</option>
+              </select>
+            </div>
 
-          <Input name="startDate" type="date" value={form.startDate} onChange={handleChange} />
-          <Input name="endDate" type="date" value={form.endDate} onChange={handleChange} />
+            {/* Start Date */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">Start Date</label>
+              <input 
+                name="startDate" 
+                type="date" 
+                value={form.startDate} 
+                onChange={handleChange} 
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50" 
+              />
+            </div>
+            
+            {/* End Date */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">End Date</label>
+              <input 
+                name="endDate" 
+                type="date" 
+                value={form.endDate} 
+                onChange={handleChange} 
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50" 
+              />
+            </div>
+          </div>
 
-          <Input name="technologies" placeholder="React, Next.js, TailWind..." value={form.technologies} onChange={handleChange} />
-          <Input name="githubUrl" placeholder="GitHub Repository URL" value={form.githubUrl} onChange={handleChange} />
-          <Input name="demoUrl" placeholder="Live Deployment Link URL" value={form.demoUrl} onChange={handleChange} />
+          <div className="space-y-4">
+            {/* Tech Stack */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">Technologies Stack</label>
+              <input 
+                name="technologies" 
+                placeholder="React, Next.js, Tailwind..." 
+                value={form.technologies} 
+                onChange={handleChange} 
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 placeholder-zinc-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder-zinc-600" 
+              />
+            </div>
+            
+            {/* GitHub Field */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">GitHub URL</label>
+              <input 
+                name="githubUrl" 
+                placeholder="https://github.com/username/repo" 
+                value={form.githubUrl} 
+                onChange={handleChange} 
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 placeholder-zinc-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder-zinc-600" 
+              />
+            </div>
+            
+            {/* Live Demo Field */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">Live Demo URL</label>
+              <input 
+                name="demoUrl" 
+                placeholder="https://your-live-project.com" 
+                value={form.demoUrl} 
+                onChange={handleChange} 
+                className="w-full px-4 py-2.5 border border-zinc-200 bg-white text-zinc-950 placeholder-zinc-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder-zinc-600" 
+              />
+            </div>
+          </div>
         </div>
 
-        <textarea
-          name="description"
-          placeholder="Detailed Description Text..."
-          value={form.description}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring min-h-[100px]"
-        />
+        {/* Textarea Field */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider pl-1">Project Description</label>
+          <textarea
+            name="description"
+            placeholder="Detailed Description Text..."
+            value={form.description}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-zinc-200 bg-white text-zinc-950 placeholder-zinc-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all text-sm font-medium min-h-[120px] resize-y dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder-zinc-600"
+          />
+        </div>
 
-        <Button onClick={handleAdd} disabled={loading} className="w-full sm:w-auto">
-          {loading ? 'Processing Submission...' : 'Add Project'}
-        </Button>
-      </Card>
+        <div className="pt-2">
+          <Button 
+            onClick={handleAdd} 
+            disabled={loading} 
+            className="w-full sm:w-auto px-6 py-2.5 bg-zinc-950 text-white hover:bg-zinc-800 rounded-xl font-semibold text-sm transition-all shadow-xs dark:bg-zinc-50 dark:text-zinc-950 dark:hover:bg-zinc-200"
+          >
+            {loading ? 'Processing Submission...' : 'Add Project'}
+          </Button>
+        </div>
+      </div>
 
-      {filtered.length === 0 ? (
-        <p className="text-center py-4 text-muted-foreground text-sm">No active projects found.</p>
-      ) : (
-        filtered.map((p) => (
-          <Card key={p.id} className="p-4 space-y-2 border shadow-sm">
+      {/* Rendered Created Projects Feed Section */}
+      <div className="space-y-4">
+        {filtered.map((p) => (
+          <div key={p.id} className="p-6 space-y-4 border border-zinc-200 rounded-3xl bg-white shadow-xs dark:bg-zinc-900 dark:border-zinc-800">
             <div className="flex justify-between items-start gap-4">
               <div>
-                <h3 className="font-semibold text-lg text-foreground">{p.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{p.description}</p>
+                <h3 className="font-bold text-xl text-zinc-950 tracking-tight dark:text-white">{p.name}</h3>
+                <p className="text-sm text-zinc-600 mt-2 whitespace-pre-wrap leading-relaxed dark:text-zinc-400">{p.description}</p>
               </div>
-
-              <Button variant="destructive" size="icon" onClick={() => handleDelete(p.id)} className="shrink-0">
-                <Trash2 size={14} />
+              <Button 
+                variant="destructive" 
+                size="icon" 
+                onClick={() => handleDelete(p.id)} 
+                className="shrink-0 bg-red-50 border border-red-200 text-red-600 rounded-xl hover:bg-red-100 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-400"
+              >
+                <Trash2 size={16} />
               </Button>
             </div>
-
-            <div className="text-xs text-muted-foreground pt-2 border-t grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
-              <p><span className="font-semibold text-foreground">Status:</span> <span className="capitalize">{p.status}</span></p>
-              {p.technologies && <p><span className="font-semibold text-foreground">Stack:</span> {p.technologies}</p>}
-              {(p.startDate || p.endDate) && (
-                <p><span className="font-semibold text-foreground">Duration:</span> {p.startDate || 'N/A'} — {p.endDate || 'N/A'}</p>
-              )}
-              
-              <div className="flex gap-4 items-center">
-                {p.githubUrl && (
-                  <a href={p.githubUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline font-medium">
-                    Code Repository
-                  </a>
-                )}
-                {p.demoUrl && (
-                  <a href={p.demoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline font-medium">
-                    Live View
-                  </a>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

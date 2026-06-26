@@ -40,10 +40,13 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geist.variable} ${geistMono.variable}`}
     >
-      <head>
-        {/* Favicon */}
-        <link rel="icon" href="/ictclubNJBS.jpg" sizes="any" />
-
+      {/* NOTE: In Next.js App Router, do NOT manually add a <head> tag here. 
+        Next.js manages the head automatically via the Metadata API and <Script /> components.
+      */}
+      <body
+        className="font-sans antialiased bg-background text-foreground"
+        suppressHydrationWarning
+      >
         {/* Google AdSense */}
         <Script
           async
@@ -56,6 +59,7 @@ export default function RootLayout({
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-1ECTFX3T01"
           strategy="afterInteractive"
+          crossOrigin="anonymous"
         />
 
         <Script id="google-analytics" strategy="afterInteractive">
@@ -63,16 +67,10 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-
             gtag('config', 'G-1ECTFX3T01');
           `}
         </Script>
-      </head>
 
-      <body
-        className="font-sans antialiased bg-background text-foreground"
-        suppressHydrationWarning
-      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"

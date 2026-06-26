@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Edit2, Trash2, Plus, X, Save } from 'lucide-react'
 
 interface Event {
-  _id: string // Maps seamlessly to SQL 'id' via payload normalization
+  _id: string 
   title: string
   description: string
   event_date: string
@@ -41,16 +41,14 @@ export default function AdminEvents() {
     fetchEvents()
   }, [])
 
-  // Helper utility to safely convert backend database items to match client expectations
   const normalizeEvent = (dbEvent: any): Event => {
     return {
       ...dbEvent,
-      _id: dbEvent._id || dbEvent.id, // Gracefully fallbacks from PostgreSQL schema setups
+      _id: dbEvent._id || dbEvent.id, 
       createdAt: dbEvent.createdAt || dbEvent.created_at
     }
   }
 
-  // ✅ FETCH EVENTS
   const fetchEvents = async () => {
     setLoading(true)
     try {
@@ -58,7 +56,6 @@ export default function AdminEvents() {
       if (!res.ok) throw new Error('Failed to fetch events from database.')
 
       const data = await res.json()
-      // Normalize entire list arrays cleanly
       const formattedEvents = Array.isArray(data) ? data.map(normalizeEvent) : []
       setEvents(formattedEvents)
     } catch (error: any) {
@@ -72,7 +69,6 @@ export default function AdminEvents() {
     }
   }
 
-  // ✅ DELETE
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this event?')) return
 
@@ -94,7 +90,6 @@ export default function AdminEvents() {
     }
   }
 
-  // ✅ EDIT POPULATOR
   const handleEdit = (event: Event) => {
     try {
       const datetime = new Date(event.event_date)
@@ -119,7 +114,6 @@ export default function AdminEvents() {
     }
   }
 
-  // ✅ CREATE / UPDATE SUBMITTER
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -142,7 +136,6 @@ export default function AdminEvents() {
 
     try {
       if (editingId) {
-        // UPDATE ACTIONS
         const res = await fetch(`/api/events/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -162,7 +155,6 @@ export default function AdminEvents() {
         setMessage({ text: 'Event updated successfully', type: 'success' })
         setEditingId(null)
       } else {
-        // CREATE ACTIONS
         const res = await fetch('/api/events', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -182,7 +174,6 @@ export default function AdminEvents() {
         setMessage({ text: 'Event created successfully', type: 'success' })
       }
 
-      // RESET STATE CONTROL
       setFormData({
         title: '',
         description: '',

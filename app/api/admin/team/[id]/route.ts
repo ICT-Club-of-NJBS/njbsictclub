@@ -67,19 +67,18 @@ async function handler(
         finalImageUrl = publicUrlData.publicUrl
       }
 
-      // If we have a public image URL (either newly uploaded or retained old one), add it to update payload
+      // If we have a public image URL, add it to update payload
       if (finalImageUrl !== null) {
         updateData.image_url = finalImageUrl
       }
 
       updateData.updated_at = new Date().toISOString()
 
-      // 3. Update the data row in Supabase
-      // Note: Matched '.eq('_id', id)' to align with frontend '_id' format
+      // 3. FIX: Changed column identification parameter match from '_id' to 'id'
       const { data: teamMember, error } = await supabase
-        .from('team_members')
+        .from('team_members') // ⚠️ Verify this table name matches your Supabase table perfectly!
         .update(updateData)
-        .eq('_id', id) 
+        .eq('id', id) 
         .select()
         .single()
 
@@ -104,11 +103,11 @@ async function handler(
   // --- DELETE METHOD ---
   if (req.method === 'DELETE') {
     try {
-      // Note: Matched '.eq('_id', id)' to align with frontend '_id' format
+      // FIX: Changed column identification parameter match from '_id' to 'id'
       const { error } = await supabase
-        .from('team_members')
+        .from('team_members') // ⚠️ Verify this table name matches your Supabase table perfectly!
         .delete()
-        .eq('_id', id)
+        .eq('id', id)
 
       if (error) {
         console.error('Database Delete Error:', error)

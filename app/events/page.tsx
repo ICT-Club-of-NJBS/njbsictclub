@@ -9,7 +9,7 @@ type Event = {
   id: string
   title: string
   description: string
-  event_date: string // Matches the backend sort key
+  event_date: string 
   location?: string
   image_url?: string
 }
@@ -68,12 +68,15 @@ export default function EventsPage() {
                   key={event.id} 
                   className="group relative bg-card/50 border border-border/50 p-6 rounded-2xl hover:border-primary/50 transition-all duration-300"
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
+                  {/* Flex layout that changes order depending on screen size */}
+                  <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    
+                    {/* Text Data Content */}
+                    <div className="flex-1 space-y-2 order-2 md:order-1">
                       <h2 className="text-2xl font-bold group-hover:text-primary transition-colors">{event.title}</h2>
-                      <p className="text-muted-foreground mt-2 line-clamp-2">{event.description}</p>
+                      <p className="text-muted-foreground line-clamp-2">{event.description}</p>
                       
-                      <div className="flex flex-wrap gap-4 mt-4 text-sm text-foreground/60">
+                      <div className="flex flex-wrap gap-4 pt-2 text-sm text-foreground/60">
                         <div className="flex items-center gap-1">
                           <Calendar size={16} className="text-primary" />
                           {new Date(event.event_date).toLocaleDateString(undefined, { 
@@ -88,6 +91,22 @@ export default function EventsPage() {
                         )}
                       </div>
                     </div>
+
+                    {/* Image Element Wrapper Block - Fixed Rendering */}
+                    {event.image_url && (
+                      <div className="w-full md:w-48 h-32 relative rounded-xl overflow-hidden shrink-0 order-1 md:order-2 bg-muted border border-border/40">
+                        <img 
+                          src={event.image_url} 
+                          alt={event.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          onError={(e) => {
+                            // Automatically fallbacks if the image URL string breaks or gets blocked
+                            (e.target as HTMLImageElement).style.display = 'none'
+                          }}
+                        />
+                      </div>
+                    )}
+
                   </div>
                 </div>
               ))}

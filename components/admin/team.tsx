@@ -15,8 +15,9 @@ import {
   Upload,
 } from 'lucide-react'
 
+// 1. FIXED INTERFACE SCHEMA (Changed _id to id to match Supabase)
 interface TeamMember {
-  _id: string // Fixed to use consistent MongoDB style ID mapping
+  id: string 
   name: string
   position: string
   email?: string
@@ -47,7 +48,6 @@ export default function TeamComponent() {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   
-  // Track the locally selected file object and its preview URL
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string>('')
 
@@ -124,9 +124,9 @@ export default function TeamComponent() {
 
   const handleEdit = (member: TeamMember) => {
     setFormData({ ...member })
-    setEditingId(member._id)
+    setEditingId(member.id) // 👈 FIXED: Use member.id instead of member._id
     setSelectedFile(null)
-    setPreviewUrl(member.image_url || '') // Show existing image if it exists
+    setPreviewUrl(member.image_url || '') 
     setShowForm(true)
   }
 
@@ -134,7 +134,7 @@ export default function TeamComponent() {
     const file = e.target.files?.[0]
     if (file) {
       setSelectedFile(file)
-      setPreviewUrl(URL.createObjectURL(file)) // Create temporary local preview
+      setPreviewUrl(URL.createObjectURL(file))
     }
   }
 
@@ -152,7 +152,7 @@ export default function TeamComponent() {
         throw new Error(data?.error || 'Failed to delete team member')
       }
 
-      setTeam((prev) => prev.filter((m) => m._id !== id))
+      setTeam((prev) => prev.filter((m) => m.id !== id)) // 👈 FIXED: Use m.id instead of m._id
       setMessage({ text: 'Team member removed successfully', type: 'success' })
     } catch (error) {
       console.error('DELETE ERROR:', error)
@@ -182,9 +182,6 @@ export default function TeamComponent() {
     }
 
     try {
-      setFormLoading(true)
-
-      // Use native FormData payload to allow file attachment processing
       const dataPayload = new FormData()
       dataPayload.append('name', formData.name || '')
       dataPayload.append('position', formData.position || '')
@@ -193,16 +190,15 @@ export default function TeamComponent() {
       dataPayload.append('bio', formData.bio || '')
       
       if (selectedFile) {
-        dataPayload.append('image', selectedFile) // Append raw binary file
+        dataPayload.append('image', selectedFile)
       } else if (formData.image_url) {
-        dataPayload.append('image_url', formData.image_url) // Retain old file if no new selection
+        dataPayload.append('image_url', formData.image_url)
       }
 
       const url = editingId ? `/api/admin/team/${editingId}` : '/api/admin/team'
       const method = editingId ? 'PUT' : 'POST'
 
-      // Note: Omit 'Content-Type' header completely when sending FormData. 
-      // The browser fills it automatically with correct boundaries.
+      setFormLoading(true)
       const res = await fetch(url, {
         method,
         body: dataPayload,
@@ -215,7 +211,7 @@ export default function TeamComponent() {
       }
 
       if (editingId) {
-        setTeam((prev) => prev.map((m) => (m._id === editingId ? data : m)))
+        setTeam((prev) => prev.map((m) => (m.id === editingId ? data : m))) // 👈 FIXED: Use m.id
         setMessage({ text: 'Team member updated successfully', type: 'success' })
       } else {
         setTeam((prev) => [data, ...prev])
@@ -304,7 +300,6 @@ export default function TeamComponent() {
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
 
-            {/* Custom File Upload Section */}
             <div className="space-y-2">
               <label className="text-sm font-medium block text-gray-700">Profile Image</label>
               <div className="flex items-center gap-4">
@@ -372,7 +367,7 @@ export default function TeamComponent() {
         <div className="grid gap-4">
           {filteredTeam.map((member) => (
             <Card
-              key={member._id}
+              key={member.id} // 👈 FIXED: Changed from member._id to member.id to eliminate duplicate/missing key warnings
               className="p-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-center gap-4">
@@ -410,11 +405,11 @@ export default function TeamComponent() {
 
                 <Button
                   size="sm"
-                  disabled={deleteLoading === member._id}
-                  onClick={() => handleDelete(member._id)}
+                  disabled={deleteLoading === member.id} // 👈 FIXED: Use member.id
+                  onClick={() => handleDelete(member.id)} // 👈 FIXED: Use member.id
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
-                  {deleteLoading === member._id ? (
+                  {deleteLoading === member.id ? (
                     'Removing...'
                   ) : (
                     <>

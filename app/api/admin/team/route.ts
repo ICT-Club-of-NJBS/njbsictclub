@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth-middleware'
 import { getSupabaseServer } from '@/lib/supabase-server'
 
-async function handler(req: NextRequest) {
-  const supabase = getSupabaseServer()
+// --- GET METHOD FUNCTION ---
+export async function GET(req: NextRequest) {
+  return requireAdmin(async (req: NextRequest) => {
+    const supabase = getSupabaseServer()
 
-  // --- GET METHOD ---
-  if (req.method === 'GET') {
     try {
       const { data: teamMembers, error } = await supabase
         .from('team_members')
@@ -23,24 +23,24 @@ async function handler(req: NextRequest) {
       console.error('[v0] Team GET exception:', error)
       return NextResponse.json([], { status: 200 })
     }
-  }
+  })(req)
+}
 
-  // --- POST METHOD ---
-  if (req.method === 'POST') {
+// --- POST METHOD FUNCTION ---
+export async function POST(req: NextRequest) {
+  return requireAdmin(async (req: NextRequest) => {
+    const supabase = getSupabaseServer()
+
     try {
-      // 1. Read request data as FormData instead of JSON
       const formData = await req.formData()
       
       const name = formData.get('name') as string
-      const position = formData.get('position') as string
+      const position = formData.get('position') as string 
       const email = formData.get('email') as string
       const phone = formData.get('phone') as string
       const bio = formData.get('bio') as string
       
-      // 'image' will be a File object if uploaded, otherwise null
       const imageFile = formData.get('image') as File | null
-      
-      // Fallback to existing image_url string if present
       let finalImageUrl = (formData.get('image_url') as string) || ''
 
       // Validations
@@ -51,18 +51,15 @@ async function handler(req: NextRequest) {
         )
       }
 
-      // 2. Handle File Upload to Supabase Storage if an actual image was selected
+      // Handle Storage Buckets Uploads
       if (imageFile && imageFile.size > 0) {
-        // Create a unique file name to avoid overwriting duplicates
         const fileExtension = imageFile.name.split('.').pop() || 'png'
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExtension}`
         
-        // Convert the File object to a binary buffer for Supabase Storage API
         const arrayBuffer = await imageFile.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
 
-        // Upload the file to your bucket (Make sure a 'team-images' bucket exists in Supabase storage and is public)
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('team-images')
           .upload(fileName, buffer, {
             contentType: imageFile.type,
@@ -78,7 +75,6 @@ async function handler(req: NextRequest) {
           )
         }
 
-        // Get the accessible public link for your freshly uploaded file
         const { data: publicUrlData } = supabase.storage
           .from('team-images')
           .getPublicUrl(fileName)
@@ -86,17 +82,18 @@ async function handler(req: NextRequest) {
         finalImageUrl = publicUrlData.publicUrl
       }
 
-      // 3. Insert metadata record into the Database table
+      // Save row item inside DB
+      // FIX: Removed "role: position" completely to stop the database from crashing
       const { data: teamMember, error } = await supabase
         .from('team_members')
         .insert({
           name,
-          position,
+          position, // Handles the role details cleanly using the correct column name
           email,
           phone,
           bio,
-          image_url: finalImageUrl, // Saved as string URL
-          skills: [], // Defaults back to clean empty array structure
+          image_url: finalImageUrl, 
+          skills: [], 
           status: 'active',
         })
         .select()
@@ -105,7 +102,7 @@ async function handler(req: NextRequest) {
       if (error) {
         console.error('[v0] Error creating team member:', error)
         return NextResponse.json(
-          { error: 'Failed to create team member record' },
+          { error: `Failed to create team member record: ${error.message}` },
           { status: 500 }
         )
       }
@@ -118,18 +115,5 @@ async function handler(req: NextRequest) {
         { status: 500 }
       )
     }
-  }
-
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  )
-}
-
-export async function GET(req: NextRequest) {
-  return requireAdmin(async (req: NextRequest) => handler(req))(req)
-}
-
-export async function POST(req: NextRequest) {
-  return requireAdmin(async (req: NextRequest) => handler(req))(req)
+  })(req)
 }
