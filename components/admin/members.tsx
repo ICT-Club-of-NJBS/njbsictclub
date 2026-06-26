@@ -80,7 +80,8 @@ export default function AdminMembers() {
       email: member.email,
       role: member.role,
     })
-    setEditingId(member._id)
+    // FIXED: Changed from member._id to member.id to match the Member type interface
+    setEditingId(member.id)
     setShowForm(true)
   }
 
