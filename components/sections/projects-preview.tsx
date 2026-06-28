@@ -57,14 +57,12 @@ export default function ProjectsPreview() {
           cache: 'no-store',
         });
 
-        // Handle failed response
         if (!response.ok) {
           console.warn('Projects API failed:', response.status);
           setProjects(fallbackProjects);
           return;
         }
 
-        // Prevent HTML error parsing
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
           console.warn('Invalid response type, using fallback');
@@ -74,7 +72,6 @@ export default function ProjectsPreview() {
 
         const data = await response.json();
 
-        // Handle array safely
         if (Array.isArray(data) && data.length > 0) {
           const formattedProjects = data.map((project: any, index: number) => ({
             id: project.id?.toString() || `project-${index}`,
@@ -86,7 +83,6 @@ export default function ProjectsPreview() {
             link: project.link || project.demo_url || '',
           }));
 
-          // Updated to show up to 3 projects for better layout grid balancing
           setProjects(formattedProjects.slice(0, 3));
         } else {
           console.warn('No projects found, using fallback');
@@ -103,13 +99,12 @@ export default function ProjectsPreview() {
     fetchProjects();
   }, [mounted]);
 
-  // Prevent hydration mismatch
   if (!mounted) return null;
 
-  // Loading UI
+  // Loading Skeleton UI
   if (loading) {
     return (
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-zinc-50/50 dark:bg-transparent">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white text-black dark:bg-black dark:text-white transition-colors">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 flex items-end justify-between">
             <div>
@@ -122,7 +117,7 @@ export default function ProjectsPreview() {
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50"
+                className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800/80 dark:bg-black"
               >
                 <div className="mb-4 h-6 w-40 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
                 <div className="mb-2 h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
@@ -141,21 +136,20 @@ export default function ProjectsPreview() {
   }
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-zinc-50/50 dark:bg-transparent transition-colors">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white text-black dark:bg-black dark:text-white transition-colors">
       <div className="mx-auto max-w-7xl">
         
-        {/* Header */}
+        {/* Header Section */}
         <div className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-5xl">
+            <h2 className="mb-4 text-4xl font-bold tracking-tight text-black dark:text-white sm:text-5xl">
               Featured Projects
             </h2>
-            <p className="text-zinc-600 dark:text-zinc-400">
-              Showcasing our latest innovations and ideas
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm sm:text-base">
+              Connect, learn, and grow with our community
             </p>
           </div>
 
-          {/* FIX: Wrapped text and icon elements into a single <span> container child */}
           <Button
             variant="ghost"
             className="hidden gap-2 rounded-full text-purple-600 hover:bg-purple-500/10 hover:text-purple-600 sm:flex"
@@ -175,16 +169,16 @@ export default function ProjectsPreview() {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900 flex flex-col justify-between min-h-[220px]"
+              className="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 dark:border-zinc-800/80 dark:bg-black flex flex-col justify-between min-h-[240px]"
             >
               
-              {/* Glow Effect */}
+              {/* Purple Ambient Glow Effect */}
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-purple-500/5 blur-3xl transition-all duration-500 group-hover:bg-purple-500/15 pointer-events-none" />
 
               <div>
-                {/* Title and Status */}
-                <div className="relative z-10 mb-4 flex items-start justify-between gap-4">
-                  <h3 className="text-xl font-semibold text-zinc-900 transition-colors group-hover:text-purple-600 dark:text-white">
+                {/* Title and Status Badge */}
+                <div className="relative z-10 mb-2 flex items-start justify-between gap-4">
+                  <h3 className="text-xl font-bold text-black dark:text-white transition-colors group-hover:text-purple-600">
                     {project.title}
                   </h3>
 
@@ -193,20 +187,20 @@ export default function ProjectsPreview() {
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="relative z-10 mb-6 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 line-clamp-3">
+                {/* Description Text */}
+                <p className="relative z-10 mb-6 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-3">
                   {project.description}
                 </p>
               </div>
 
               <div>
-                {/* Technologies */}
+                {/* Technologies Badges and Meta Info Icons Layout style */}
                 {project.technologies.length > 0 && (
-                  <div className="relative z-10 mb-6 flex flex-wrap gap-2">
+                  <div className="relative z-10 mb-6 flex flex-wrap gap-2 text-zinc-500 dark:text-zinc-400">
                     {project.technologies.map((tech) => (
                       <span
                         key={tech}
-                        className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-medium text-zinc-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                        className="rounded-md border border-zinc-200/60 bg-zinc-50/50 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:border-zinc-800/60 dark:bg-zinc-900/40 dark:text-zinc-400"
                       >
                         {tech}
                       </span>
@@ -214,16 +208,16 @@ export default function ProjectsPreview() {
                   </div>
                 )}
 
-                {/* Action Links */}
-                <div className="relative z-10 flex items-center gap-5 border-t border-zinc-100 pt-4 dark:border-zinc-800/60">
+                {/* Footer Link Elements matched exactly with Image details */}
+                <div className="relative z-10 flex items-center gap-5 border-t border-zinc-100 pt-4 dark:border-zinc-900">
                   {project.github && (
                     <a
                       href={project.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-purple-600 dark:text-zinc-400 dark:hover:text-purple-400"
+                      className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-purple-600 dark:text-zinc-400 dark:hover:text-purple-400"
                     >
-                      <Github size={16} />
+                      <Github size={14} className="text-zinc-400" />
                       Code
                     </a>
                   )}
@@ -233,9 +227,9 @@ export default function ProjectsPreview() {
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm font-medium text-zinc-500 transition-colors hover:text-purple-600 dark:text-zinc-400 dark:hover:text-purple-400"
+                      className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-purple-600 dark:text-zinc-400 dark:hover:text-purple-400"
                     >
-                      <ExternalLink size={16} />
+                      <ExternalLink size={14} className="text-zinc-400" />
                       Live Demo
                     </a>
                   )}
@@ -246,11 +240,11 @@ export default function ProjectsPreview() {
           ))}
         </div>
 
-        {/* Mobile Button Container */}
+        {/* Fallback View All Button for Mobile */}
         <div className="mt-10 flex justify-center sm:hidden">
           <Button
             variant="outline"
-            className="rounded-full border-zinc-300 dark:border-zinc-700"
+            className="rounded-full border-zinc-300 bg-white text-black hover:bg-zinc-50 dark:border-zinc-700 dark:bg-black dark:text-white"
             asChild
           >
             <Link href="/projects">

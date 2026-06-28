@@ -32,21 +32,25 @@ export default function ContactPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess(false)
 
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          subject: formData.subject,
-          message: formData.message,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          subject: formData.subject.trim(),
+          message: formData.message.trim(),
         }),
       })
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        throw new Error('Failed to send message')
+        // Surface the real backend database or validation error to the alert card
+        throw new Error(data.error || data.details?.message || 'Failed to send message')
       }
 
       setSuccess(true)
@@ -54,7 +58,7 @@ export default function ContactPage() {
       setTimeout(() => setSuccess(false), 5000)
     } catch (err: any) {
       console.error('Error sending message:', err)
-      setError('Failed to send message. Please try again.')
+      setError(err.message || 'Failed to send message. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -63,62 +67,62 @@ export default function ContactPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-background pt-24">
+      <main className="min-h-screen bg-background pt-24 text-foreground">
         <section className="py-16 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-12">
               <h1 className="text-4xl sm:text-5xl font-bold mb-4">Get in Touch</h1>
-              <p className="text-lg text-foreground/60 max-w-2xl mx-auto">
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Have a question? Want to join ICT Club? We&apos;d love to hear from you!
               </p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
               {/* Contact Info Cards */}
-              <div className="bg-card/50 border border-border/50 rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <Mail className="text-primary" size={24} />
                   <h3 className="font-semibold">Email</h3>
                 </div>
-                <p className="text-foreground/60 text-sm">
+                <p className="text-muted-foreground text-sm">
                   <a href="mailto:njbsictclub@gmail.com" className="text-primary hover:underline">
                     njbsictclub@gmail.com
                   </a>
                 </p>
               </div>
 
-              <div className="bg-card/50 border border-border/50 rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
-                  <MapPin className="text-accent" size={24} />
+                  <MapPin className="text-primary" size={24} />
                   <h3 className="font-semibold">Location</h3>
                 </div>
-                <p className="text-foreground/60 text-sm">
-                 Tilottama-8, Charnumber
+                <p className="text-muted-foreground text-sm">
+                  Tilottama-8, Charnumber
                 </p>
               </div>
 
-              <div className="bg-card/50 border border-border/50 rounded-xl p-6">
+              <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-3">
-                  <Phone className="text-primary/70" size={24} />
+                  <Phone className="text-primary" size={24} />
                   <h3 className="font-semibold">Response Time</h3>
                 </div>
-                <p className="text-foreground/60 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Usually within 24 hours
                 </p>
               </div>
             </div>
 
             {/* Contact Form */}
-            <div className="bg-card/50 border border-border/50 rounded-xl p-8">
+            <div className="bg-card border border-border rounded-xl p-8 shadow-sm">
               {success && (
-                <div className="mb-6 p-4 rounded-lg bg-green-500/20 border border-green-500/50 text-green-500">
+                <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-green-600 dark:text-green-400 font-medium">
                   Thanks for your message! We&apos;ll get back to you soon.
                 </div>
               )}
 
               {error && (
-                <div className="mb-6 p-4 rounded-lg bg-destructive/20 border border-destructive/50 text-destructive">
-                  {error}
+                <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive font-medium break-words">
+                  ⚠️ {error}
                 </div>
               )}
 
@@ -186,13 +190,13 @@ export default function ContactPage() {
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="w-full px-3 py-2 rounded-lg bg-input border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50"
+                    className="w-full px-3 py-2 rounded-md bg-background border border-input text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
                   />
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full"
+                  className="w-full font-medium"
                   disabled={loading}
                 >
                   {loading ? 'Sending...' : 'Send Message'}

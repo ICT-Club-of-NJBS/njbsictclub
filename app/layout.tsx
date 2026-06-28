@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://njbsictclubss.vercel.app'),
+  metadataBase: new URL('https://njbsictclub.vercel.app'),
   title: 'ICT Club of NJBS | Tech Community',
   description:
     'Innovation, Creativity, and Technology Club - Join our community of tech enthusiasts',
@@ -26,6 +26,10 @@ export const metadata: Metadata = {
     icon: '/ictclubNJBS.jpg',
     shortcut: '/ictclubNJBS.jpg',
     apple: '/ictclubNJBS.jpg',
+  },
+  // Added Google Search Console verification right here:
+  verification: {
+    google: 'ApobhGV9jIEedP8jCjznWNKUkIZGJvuZ18Ma04Tdjrw',
   },
 }
 

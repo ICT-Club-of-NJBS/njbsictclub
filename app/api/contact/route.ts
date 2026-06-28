@@ -4,28 +4,43 @@ import { getSupabaseServer } from '@/lib/supabase-server'
 export async function POST(req: Request) {
   try {
     const supabase = getSupabaseServer()
-    const { name, email, subject, message } = await req.json()
+    
+    // 1. SAFE JSON PARSING
+    let body;
+    try {
+      body = await req.json()
+    } catch (parseError) {
+      console.error('[Contact API] Failed to parse JSON body:', parseError)
+      return NextResponse.json({ error: 'Malformed or empty JSON payload' }, { status: 400 })
+    }
 
-    // Validate inputs
+    const { name, email, subject, message } = body
+
+    // 2. INPUT VALIDATION
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'All fields (name, email, subject, message) are required' },
         { status: 400 }
       )
     }
 
-    // Find or create user for contact sender
-    const { data: user } = await supabase
+    // 3. CHECK IF SENDER ALREADY EXISTS
+    const { data: user, error: userFetchError } = await supabase
       .from('users')
       .select('id')
       .eq('email', email)
-      .maybeSingle()
+      .maybeSingle() // Prevents throwing an unhandled exception if user doesn't exist
+
+    if (userFetchError) {
+      console.error('[Supabase Fetch Error]:', userFetchError)
+      return NextResponse.json({ error: 'Database validation check failed' }, { status: 500 })
+    }
 
     let userId = user?.id || null
 
-    // If user doesn't exist, optionally create one (or just store contact as message)
+    // 4. CREATE USER IF THEY DON'T EXIST
     if (!userId) {
-      const { data: newUser } = await supabase
+      const { data: newUser, error: userInsertError } = await supabase
         .from('users')
         .insert({
           email,
@@ -36,13 +51,26 @@ export async function POST(req: Request) {
           oauth_provider: 'email',
         })
         .select('id')
-        .single()
+        .maybeSingle() // Safer alternative to .single()
+
+      if (userInsertError) {
+        console.error('[Supabase User Insertion Error]:', userInsertError)
+        return NextResponse.json(
+          { error: 'Failed to provision contact profile. Database schema mismatch.' }, 
+          { status: 500 }
+        )
+      }
 
       userId = newUser?.id || null
     }
 
-    // Create message record
-    const { data: messageRecord, error } = await supabase
+    // Fallback error catcher in case database configurations yield a null ID string
+    if (!userId) {
+      return NextResponse.json({ error: 'Could not bind user identity key mapping' }, { status: 500 })
+    }
+
+    // 5. SAVE THE MESSAGE RECORD
+    const { data: messageRecord, error: messageError } = await supabase
       .from('messages')
       .insert({
         sender_id: userId,
@@ -51,38 +79,36 @@ export async function POST(req: Request) {
         status: 'unread',
       })
       .select()
-      .single()
+      .maybeSingle()
 
-    if (error) {
-      console.error('[v0] Error creating message:', error)
+    if (messageError) {
+      console.error('[Supabase Message Insertion Error]:', messageError)
       return NextResponse.json(
-        { error: 'Failed to save message' },
+        { error: 'Failed to process and record contact message block' },
         { status: 500 }
       )
     }
 
-    console.log('[v0] New contact message:', {
+    console.log('[Contact API Success]: Generated log entry:', {
       name,
       email,
       subject,
-      messageId: messageRecord.id,
+      messageId: messageRecord?.id,
     })
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Your message has been received',
-        messageId: messageRecord.id,
+        message: 'Your message has been received successfully.',
+        messageId: messageRecord?.id,
       },
       { status: 201 }
     )
   } catch (error: any) {
-    console.error('[v0] Contact API error:', error)
-
+    // 6. GLOBAL UNEXPECTED ERROR FALLBACK
+    console.error('[Global Contact API Crash Handler]:', error)
     return NextResponse.json(
-      {
-        error: error.message || 'Failed to send message',
-      },
+      { error: error.message || 'An unexpected internal processing server failure occurred.' },
       { status: 500 }
     )
   }
