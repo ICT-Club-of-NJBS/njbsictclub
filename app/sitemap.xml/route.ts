@@ -1,1 +1,26 @@
-export const dynamic = 'force-dynamic';echo.echo export async function GET() {echo   const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>echo   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">echo     <url>echo       <loc>https://njbsictclub.vercel.app/</loc>echo       <lastmod>2026-06-28</lastmod>echo       <changefreq>weekly</changefreq>echo       <priority>1.0</priority>echo     </url>echo     <url>echo       <loc>https://njbsictclub.vercel.app/events</loc>echo       <lastmod>2026-06-28</lastmod>echo       <changefreq>daily</changefreq>echo       <priority>0.9</priority>echo     </url>echo   </urlset>`;echo.echo   return new Response(sitemapXml, {echo     headers: {echo       'Content-Type': 'application/xml',echo       'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate',echo     },echo   });echo }) 
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+      <loc>https://njbsictclub.vercel.app/</loc>
+      <lastmod>2026-06-28</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>1.0</priority>
+    </url>
+    <url>
+      <loc>https://njbsictclub.vercel.app/events</loc>
+      <lastmod>2026-06-28</lastmod>
+      <changefreq>daily</changefreq>
+      <priority>0.9</priority>
+    </url>
+  </urlset>`;
+
+  return new Response(sitemapXml, {
+    headers: {
+      'Content-Type': 'application/xml',
+      'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate',
+    },
+  });
+}
