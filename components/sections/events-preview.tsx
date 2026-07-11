@@ -23,10 +23,16 @@ export default function Events() {
     const fetchEvents = async () => {
       try {
         const res = await fetch('/api/events');
+        if (!res.ok) {
+          throw new Error(`Events API responded with status ${res.status}`);
+        }
         const data = await res.json();
+        if (!Array.isArray(data)) {
+          throw new TypeError('Expected events data to be an array');
+        }
         // Get upcoming events (next 3 events sorted by date)
         const upcoming = data
-          .filter((event: Event) => new Date(event.event_date).getTime() >= new Date().setHours(0,0,0,0))
+          .filter((event: Event) => event && event.event_date && new Date(event.event_date).getTime() >= new Date().setHours(0,0,0,0))
           .sort((a: Event, b: Event) => 
             new Date(a.event_date).getTime() - new Date(b.event_date).getTime()
           )

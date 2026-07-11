@@ -104,12 +104,12 @@ export default function ProjectsPreview() {
   // Loading Skeleton UI
   if (loading) {
     return (
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white text-black dark:bg-black dark:text-white transition-colors">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 relative">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 flex items-end justify-between">
             <div>
-              <div className="mb-4 h-10 w-64 animate-pulse rounded-xl bg-zinc-200 dark:bg-zinc-800" />
-              <div className="h-5 w-52 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+              <div className="mb-4 h-10 w-64 animate-pulse rounded-xl bg-muted" />
+              <div className="h-5 w-52 animate-pulse rounded-lg bg-muted" />
             </div>
           </div>
 
@@ -117,16 +117,20 @@ export default function ProjectsPreview() {
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800/80 dark:bg-black"
+                className="glass bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl p-8 min-h-[240px] flex flex-col justify-between"
               >
-                <div className="mb-4 h-6 w-40 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mb-2 h-4 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mb-6 h-4 w-3/4 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-                <div className="mb-6 flex gap-2">
-                  <div className="h-6 w-16 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
-                  <div className="h-6 w-20 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+                <div>
+                  <div className="mb-4 h-6 w-40 animate-pulse rounded-lg bg-muted" />
+                  <div className="mb-2 h-4 w-full animate-pulse rounded bg-muted" />
+                  <div className="mb-6 h-4 w-3/4 animate-pulse rounded bg-muted" />
                 </div>
-                <div className="h-5 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                <div>
+                  <div className="mb-6 flex gap-2">
+                    <div className="h-6 w-16 animate-pulse rounded-full bg-muted" />
+                    <div className="h-6 w-20 animate-pulse rounded-full bg-muted" />
+                  </div>
+                  <div className="h-5 w-24 animate-pulse rounded bg-muted" />
+                </div>
               </div>
             ))}
           </div>
@@ -136,23 +140,23 @@ export default function ProjectsPreview() {
   }
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white text-black dark:bg-black dark:text-white transition-colors">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 relative">
       <div className="mx-auto max-w-7xl">
         
         {/* Header Section */}
         <div className="mb-12 flex items-end justify-between">
           <div>
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-black dark:text-white sm:text-5xl">
+            <h2 className="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
               Featured Projects
             </h2>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm sm:text-base">
+            <p className="text-foreground/70 text-sm sm:text-base">
               Connect, learn, and grow with our community
             </p>
           </div>
 
           <Button
             variant="ghost"
-            className="hidden gap-2 rounded-full text-purple-600 hover:bg-purple-500/10 hover:text-purple-600 sm:flex"
+            className="hidden gap-2 text-primary hover:bg-primary/10 sm:flex"
             asChild
           >
             <Link href="/projects">
@@ -169,26 +173,26 @@ export default function ProjectsPreview() {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/30 dark:border-zinc-800/80 dark:bg-black flex flex-col justify-between min-h-[240px]"
+              className="glass bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card/60 flex flex-col justify-between min-h-[240px] group relative overflow-hidden"
             >
               
-              {/* Purple Ambient Glow Effect */}
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-purple-500/5 blur-3xl transition-all duration-500 group-hover:bg-purple-500/15 pointer-events-none" />
+              {/* Primary Ambient Glow Effect */}
+              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/5 blur-3xl transition-all duration-500 group-hover:bg-primary/15 pointer-events-none" />
 
               <div>
                 {/* Title and Status Badge */}
                 <div className="relative z-10 mb-2 flex items-start justify-between gap-4">
-                  <h3 className="text-xl font-bold text-black dark:text-white transition-colors group-hover:text-purple-600">
+                  <h3 className="text-xl font-bold transition-colors group-hover:text-primary">
                     {project.title}
                   </h3>
 
-                  <span className="rounded-full border border-purple-500/20 bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 capitalize whitespace-nowrap">
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary capitalize whitespace-nowrap">
                     {project.status}
                   </span>
                 </div>
 
                 {/* Description Text */}
-                <p className="relative z-10 mb-6 text-sm text-zinc-500 dark:text-zinc-400 line-clamp-3">
+                <p className="relative z-10 mb-6 text-sm text-foreground/70 line-clamp-3">
                   {project.description}
                 </p>
               </div>
@@ -196,11 +200,11 @@ export default function ProjectsPreview() {
               <div>
                 {/* Technologies Badges and Meta Info Icons Layout style */}
                 {project.technologies.length > 0 && (
-                  <div className="relative z-10 mb-6 flex flex-wrap gap-2 text-zinc-500 dark:text-zinc-400">
+                  <div className="relative z-10 mb-6 flex flex-wrap gap-2">
                     {project.technologies.map((tech) => (
                       <span
                         key={tech}
-                        className="rounded-md border border-zinc-200/60 bg-zinc-50/50 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:border-zinc-800/60 dark:bg-zinc-900/40 dark:text-zinc-400"
+                        className="rounded-md border border-border/50 bg-secondary/50 px-2 py-0.5 text-xs font-medium text-foreground/70"
                       >
                         {tech}
                       </span>
@@ -209,15 +213,15 @@ export default function ProjectsPreview() {
                 )}
 
                 {/* Footer Link Elements matched exactly with Image details */}
-                <div className="relative z-10 flex items-center gap-5 border-t border-zinc-100 pt-4 dark:border-zinc-900">
+                <div className="relative z-10 flex items-center gap-5 border-t border-border/50 pt-4">
                   {project.github && (
                     <a
                       href={project.github}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-purple-600 dark:text-zinc-400 dark:hover:text-purple-400"
+                      className="flex items-center gap-1.5 text-xs font-medium text-foreground/60 transition-colors hover:text-primary"
                     >
-                      <Github size={14} className="text-zinc-400" />
+                      <Github size={14} className="text-foreground/40" />
                       Code
                     </a>
                   )}
@@ -227,9 +231,9 @@ export default function ProjectsPreview() {
                       href={project.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 transition-colors hover:text-purple-600 dark:text-zinc-400 dark:hover:text-purple-400"
+                      className="flex items-center gap-1.5 text-xs font-medium text-foreground/60 transition-colors hover:text-primary"
                     >
-                      <ExternalLink size={14} className="text-zinc-400" />
+                      <ExternalLink size={14} className="text-foreground/40" />
                       Live Demo
                     </a>
                   )}
@@ -244,7 +248,7 @@ export default function ProjectsPreview() {
         <div className="mt-10 flex justify-center sm:hidden">
           <Button
             variant="outline"
-            className="rounded-full border-zinc-300 bg-white text-black hover:bg-zinc-50 dark:border-zinc-700 dark:bg-black dark:text-white"
+            className="rounded-full border-border/50 hover:bg-card/50"
             asChild
           >
             <Link href="/projects">
